@@ -4,6 +4,10 @@
  * Pi and C++. It uses I2C to talk to IMU.
  */
 
+// Dmitrii: I2C block read/write added
+
+#include <stdint.h>
+
 #ifndef MPU9250_H_
 #define MPU9250_H_ 
 
@@ -15,7 +19,7 @@
 // ******* Register addresses **********
 //Magnetometer Registers
 // AK8963 is the name of the magnetormeter IC
-#define AK8963_ADDRESS   0x0C
+//#define AK8963_ADDRESS   0x0C
 #define WHO_AM_I_AK8963  0x00 // should return 0x48
 #define INFO             0x01
 #define AK8963_ST1       0x02  // data ready status bit 0
@@ -157,7 +161,6 @@
 #define FIFO_COUNTH        0x72
 #define FIFO_COUNTL        0x73
 #define FIFO_R_W           0x74
-#define WHO_AM_I_MPU9250   0x75 // Should return 0x71
 #define XA_OFFSET_H        0x77
 #define XA_OFFSET_L        0x78
 #define YA_OFFSET_H        0x7A
@@ -167,13 +170,20 @@
 
 // Using the MPU-9250 breakout board, ADO is set to 0
 // Seven-bit device address is 110100 for ADO = 0 and 110101 for ADO = 1
-#define ADO 0
-#if ADO
-#define MPU9250_ADDRESS 0x69  // Device address when ADO = 1
-#else
 #define MPU9250_ADDRESS 0x68  // Device address when ADO = 0
-#define AK8963_ADDRESS  0x0C   // Address of magnetometer
-#endif // AD0
+#define AK8963_ADDRESS  0x0C
+
+#define WHO_AM_I_MPU9250   0x75 // Should return 0x71
+#define WHO_AM_I_AK8963    0x00 // Should return 0x48
+
+
+//#define ADO 0
+//#if ADO
+//#define MPU9250_ADDRESS 0x69  // Device address when ADO = 1
+//#else
+//#define MPU9250_ADDRESS 0x68  // Device address when ADO = 0
+//#define AK8963_ADDRESS  0x0C   // Address of magnetometer
+//#endif // AD0
 
 class MPU9250
 {
@@ -198,6 +208,8 @@ class MPU9250
       MFS_16BITS      // 0.15 mG per LSB
     };
 
+    // Device descriptor
+    int fd;
     // Specify sensor full scale
     uint8_t Gscale = GFS_250DPS;
     uint8_t Ascale = AFS_2G;
@@ -207,6 +219,8 @@ class MPU9250
     uint8_t Mmode = 0x02;
 
   public:
+    MPU9250();
+  
     float pitch, yaw, roll;
     float temperature;   // Stores the real internal chip temperature in Celsius
     int16_t tempCount;   // Temperature raw count output
@@ -232,21 +246,27 @@ class MPU9250
     int16_t accelCount[3];
     
   public:
-    //void getMres();
-    //void getGres();
-    //void getAres();
-    //void readAccelData(int16_t *);
-    //void readGyroData(int16_t *);
-    //void readMagData(int16_t *);
-    //int16_t readTempData();
-    //void updateTime();
-    //void initAK8963(float *);
-    //void initMPU9250();
-    //void calibrateMPU9250(float * gyroBias, float * accelBias);
-    //void MPU9250SelfTest(float * destination);
-    //void writeByte(uint8_t, uint8_t, uint8_t);
-    //uint8_t readByte(uint8_t, uint8_t);
-    //void readBytes(uint8_t, uint8_t, uint8_t, uint8_t *);
+    uint8_t getMPU9250ID();
+    uint8_t getAK8963CID();
+  
+    void getMres();
+    void getGres();
+    void getAres();
+    void readAccelData(int16_t *);
+    void readGyroData(int16_t *);
+    void readMagData(int16_t *);
+    int readTempData();
+    void updateTime();
+    void initAK8963(float *);
+    void initMPU9250();
+    void calibrateMPU9250(float * gyroBias, float * accelBias);
+    void MPU9250SelfTest(float * destination);
+    void writeByte(uint8_t, uint8_t, uint8_t);
+    bool writeBytes(unsigned char devAddr, unsigned char regAddr, unsigned char length, unsigned char * data);
+    uint8_t readByte(uint8_t, uint8_t);
+    void readBytes(uint8_t, uint8_t, uint8_t, uint8_t *);
+  
+    void delay(int timeMS);
 };  // class MPU9250
 
 
